@@ -1,0 +1,63 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model classificacao {
+  idClassificacao Int      @id @default(autoincrement())
+  nome            String   @unique(map: "nome") @db.VarChar(100)
+  imovel          imovel[]
+}
+
+model endereco {
+  idEndereco Int      @id @default(autoincrement())
+  rua        String   @db.VarChar(150)
+  numero     String   @db.VarChar(10)
+  bairro     String   @db.VarChar(100)
+  cidade     String   @db.VarChar(100)
+  estado     String   @db.Char(2)
+  cep        String   @db.VarChar(10)
+  imovel     imovel[]
+
+  @@index([bairro], map: "idx_bairro")
+  @@index([cidade], map: "idx_cidade")
+  @@index([estado], map: "idx_estado")
+}
+
+model imovel {
+  idImovel          Int           @id @default(autoincrement())
+  inscricaoIPTU     String        @unique(map: "inscricaoIPTU") @db.VarChar(50)
+  inscricaoBombeiro String?       @db.VarChar(50)
+  metragem          Decimal       @db.Decimal(10, 2)
+  dataCadastro      DateTime      @default(now()) @db.DateTime(0)
+  idEndereco        Int
+  idClassificacao   Int
+  idTipologia       Int
+  idStatus          Int
+  classificacao     classificacao @relation(fields: [idClassificacao], references: [idClassificacao], onUpdate: Restrict, map: "fk_imovel_classificacao")
+  endereco          endereco      @relation(fields: [idEndereco], references: [idEndereco], onUpdate: Restrict, map: "fk_imovel_endereco")
+  status            status        @relation(fields: [idStatus], references: [idStatus], onUpdate: Restrict, map: "fk_imovel_status")
+  tipologia         tipologia     @relation(fields: [idTipologia], references: [idTipologia], onUpdate: Restrict, map: "fk_imovel_tipologia")
+
+  @@index([idClassificacao], map: "fk_imovel_classificacao")
+  @@index([idEndereco], map: "fk_imovel_endereco")
+  @@index([idTipologia], map: "fk_imovel_tipologia")
+  @@index([dataCadastro], map: "idx_dataCadastro")
+  @@index([idStatus], map: "idx_status")
+}
+
+model status {
+  idStatus Int      @id @default(autoincrement())
+  nome     String   @unique(map: "nome") @db.VarChar(50)
+  imovel   imovel[]
+}
+
+model tipologia {
+  idTipologia Int      @id @default(autoincrement())
+  nome        String   @unique(map: "nome") @db.VarChar(100)
+  imovel      imovel[]
+}
